@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{SITE_NAME}} — Live</title>
+<meta name="description" content="{{SITE_DESCRIPTION}}">
+<meta name="theme-color" content="#090c12">
+<link rel="stylesheet" href="/style.css">
+{{SITE_STYLE}}
+<script type="application/json" id="site-config">{{SITE_CONFIG}}</script>
+</head>
+<body>
+<header id="hdr"></header>
+<main class="wrap">
+  <div class="sessbar" id="sessbar"></div>
+  <div class="grid-live">
+    <aside class="card f1card" id="f1tower" aria-label="Timing tower"></aside>
+    <section class="card mapcard">
+      <div class="card-h">Live map
+        <span class="tag box" id="lwtag">…</span>
+        <div class="sp toggles">
+          <span class="tg on" data-opt="names" title="Show driver names">Names</span>
+          <span class="tg" data-opt="trails" title="Show the last seconds of each car's path">Trails</span>
+          <span class="tg on" data-opt="incidents" title="Show where laps were invalidated">Cuts</span>
+          <span class="tg" id="resetmap" title="Reset zoom and position (double-click the map)">Recenter</span>
+        </div>
+      </div>
+      <div class="mapbox" id="mapbox">
+        <canvas id="map" aria-label="Live track map"></canvas>
+        <div class="mapmsg" id="mapmsg"></div>
+        <div class="maptip hide" id="tip"></div>
+        <div class="maplegend">
+          <span><i style="background:#4da3ff"></i>car</span>
+          <span><i style="background:transparent;border:2px dashed #ff4d5e"></i>invalid lap</span>
+          <span><i style="background:#ff4d5e"></i>track limits</span>
+          <span><i style="background:#21d3a0"></i>start</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="stack">
+      <section class="card">
+        <div class="card-h">Timing <span class="muted lc" id="sessinfo"></span></div>
+        <div class="tablewrap">
+          <table id="tower" class="tight">
+            <thead><tr><th>#</th><th>Driver</th><th class="r">Best</th><th class="r">Last</th><th class="r col-gap">Gap</th>
+              <th class="c hide-sm sec-col">S1</th><th class="c hide-sm sec-col">S2</th><th class="c hide-sm sec-col">S3</th>
+              <th class="c">Laps</th><th class="r">Current lap</th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty hide" id="towerEmpty">Nobody on track right now. Lap times appear here live.</div>
+      </section>
+      <section class="card"><div class="card-h">Recent laps <a class="sp muted lc" href="/laps">all laps →</a></div><div id="recentlaps"></div></section>
+    </div>
+  </div>
+
+  <section class="card diagcard">
+    <div class="card-h">Car telemetry &amp; diagnostics <span id="dgwho" class="lc"></span><div class="sp pickers" id="dgpick"></div></div>
+    <div class="diag-wrap body"><div id="cockpit" class="cockpit"></div><div id="diag"></div></div>
+  </section>
+
+  <div class="grid-3">
+    <section class="card"><div class="card-h">Track</div><div class="body" id="trackinfo"></div><div class="body pad-t0" id="elev"></div></section>
+    <section class="card"><div class="card-h">Activity</div><div class="feed" id="feed"></div></section>
+    <div class="stack">
+      <section class="card"><div class="card-h">Track records <a class="sp muted lc" href="/records">leaderboards →</a></div><div id="top10"></div></section>
+      <section class="card"><div class="card-h">Race control</div><div class="feed short" id="rc"></div></section>
+    </div>
+  </div>
+  <footer><div>{{SITE_FOOTER}}</div></footer>
+</main>
+<script src="/app.js"></script>
+<script src="/map.js"></script>
+<script src="/session.js"></script>
+<script src="/tower.js"></script>
+<script src="/diag.js"></script>
+<script src="/cockpit.js"></script>
+<script src="/live.js"></script>
+</body>
+</html>

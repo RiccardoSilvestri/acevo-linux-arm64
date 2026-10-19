@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{SITE_NAME}} — Driver</title>
+<meta name="description" content="Driver statistics and records">
+<meta name="theme-color" content="#090c12">
+<link rel="stylesheet" href="/style.css">
+{{SITE_STYLE}}
+<script type="application/json" id="site-config">{{SITE_CONFIG}}</script>
+</head>
+<body>
+<header id="hdr"></header>
+<main class="wrap">
+<a class="muted back" href="/records">← Leaderboards</a>
+<h1 id="name">Driver</h1>
+<div class="sub" id="sub"></div>
+<div class="stats" id="stats"></div>
+<div class="grid-2">
+  <section class="card"><div class="card-h">Recent laps <span class="muted lc">taller bar = faster lap · green valid · red invalidated</span></div><div id="bars" class="bars"></div><div id="recent"></div></section>
+  <section class="card"><div class="card-h">Personal records</div><div id="records"></div></section>
+</div>
+</main>
+<script src="/app.js"></script>
+<script src="/driver.js"></script>
+</body>
+</html>

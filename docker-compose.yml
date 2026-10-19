@@ -1,0 +1,143 @@
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "2"
+
+services:
+  ace-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${STACK_NAME:-acevo}-server:latest
+    container_name: ${STACK_NAME:-acevo}-server
+    restart: unless-stopped
+    env_file: config/game.env
+    environment:
+      ACE_PORT: ${GAME_PORT:-9600}
+      CONFIG_OWNER: "${APP_UID:-1000}:${APP_GID:-1000}"
+    volumes:
+      - ./server-data:/data
+      - ./config/server_config.example.json:/config/server_config.example.json:ro
+      - ./config/season_def.example.json:/config/season_def.example.json:ro
+    ports:
+      - "${GAME_PORT:-9600}:${GAME_PORT:-9600}/tcp"
+      - "${GAME_PORT:-9600}:${GAME_PORT:-9600}/udp"
+    stdin_open: true
+    tty: true
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/$${ACE_PORT:-9600}"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    logging:
+      <<: *logging
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  lapwatch:
+    build:
+      context: ./lapwatch
+    image: ${STACK_NAME:-acevo}-lapwatch:latest
+    container_name: ${STACK_NAME:-acevo}-lapwatch
+    restart: unless-stopped
+    network_mode: host
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - path: config/lapwatch.env
+        required: false
+    environment:
+      LW_PORT: ${GAME_PORT:-9600}
+      LW_OUT: /dash-data/lapwatch
+      LW_SEASON: /srv-config/season_def.json
+    volumes:
+      - ./dashboard-data:/dash-data
+      - ./server-data/server:/srv-config:ro
+    logging: *logging
+
+  dashboard:
+    image: python:3.12-alpine
+    container_name: ${STACK_NAME:-acevo}-dashboard
+    restart: unless-stopped
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - ace-server
+    command: ["python3", "/app/app.py"]
+    env_file:
+      - path: config/dashboard.env
+        required: false
+    environment:
+      PORT: "8080"
+      ACE_API: http://ace-server:8000/
+    volumes:
+      - ./dashboard:/app:ro
+      - ./server-data/logs:/logs:ro
+      - ./server-data/server:/srv-config:ro
+      - ./dashboard-data:/dash-data
+    ports:
+      - "${WEB_BIND:-0.0.0.0}:${WEB_PORT:-8090}:8080"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8080/api/health',timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: ${STACK_NAME:-acevo}-proxy
+    profiles: ["https"]
+    restart: unless-stopped
+    depends_on:
+      - dashboard
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-localhost}
+    volumes:
+      - ./config/proxy/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ${TLS_CERT:-./config/proxy/cert.pem}:/etc/nginx/tls/cert.pem:ro
+      - ${TLS_KEY:-./config/proxy/key.pem}:/etc/nginx/tls/key.pem:ro
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    logging: *logging
+
+  discord-bot:
+    build:
+      context: ./bot
+    image: ${STACK_NAME:-acevo}-discord-bot:latest
+    container_name: ${STACK_NAME:-acevo}-discord-bot
+    restart: unless-stopped
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
+    depends_on:
+      - dashboard
+    group_add:
+      - "${DOCKER_GID:-999}"
+    env_file:
+      - path: config/bot.env
+        required: false
+    environment:
+      ACE_STATUS_URL: http://dashboard:8080/api/status
+      ACE_CONTAINER: ${STACK_NAME:-acevo}-server
+      CHALLENGE_FILE: /config/challenge.json
+      GAME_CONFIG_DIR: /srv
+      GAME_DIR: /srv
+    volumes:
+      - ./bot:/bot:ro
+      - ./config/challenge.json:/config/challenge.json:ro
+      - ./dashboard-data:/dash-data
+      - ./server-data/server:/srv
+      - /var/run/docker.sock:/var/run/docker.sock
+    logging: *logging

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{SITE_NAME}} — Laps</title>
+<meta name="description" content="All laps with validity">
+<meta name="theme-color" content="#090c12">
+<link rel="stylesheet" href="/style.css">
+{{SITE_STYLE}}
+<script type="application/json" id="site-config">{{SITE_CONFIG}}</script>
+</head>
+<body>
+<header id="hdr"></header>
+<main class="wrap">
+<h1>Laps</h1>
+<div class="sub">Every completed lap, live, with validity decided by the game server.</div>
+<div class="sel-row"><span class="pill on" data-f="all">All</span><span class="pill" data-f="valid">Valid</span><span class="pill" data-f="invalid">Invalidated</span>
+ <input type="text" id="q" placeholder="Search driver, car or track…" aria-label="Search laps"></div>
+<section class="card"><div class="tablewrap"><table id="lapstable"><thead><tr><th>Time</th><th>Driver</th><th>Car</th><th class="hide-sm">Track</th><th class="r">Lap time</th>
+<th class="hide-sm sec-col">Sectors</th><th class="c">Result</th><th class="c hide-sm">Track limits</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="empty hide" id="empty">No laps yet.</div></section>
+</main>
+<script src="/app.js"></script>
+<script src="/laps.js"></script>
+</body>
+</html>

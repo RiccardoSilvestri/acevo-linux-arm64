@@ -1,0 +1,163 @@
+{
+  "default_class": "GT3",
+  "classes": {
+    "GT3": {
+      "label": "GT3",
+      "description": "GT3 race cars"
+    },
+    "GT2": {
+      "label": "GT2",
+      "description": "GT2 race cars"
+    },
+    "GT4": {
+      "label": "GT4",
+      "description": "GT4 race cars"
+    },
+    "CUP": {
+      "label": "Cup",
+      "description": "One-make cup and trofeo racers",
+      "presets": [
+        "preset_992c_mech_1",
+        "preset_f488ce_mech_1",
+        "preset_stevo2_mech_1"
+      ]
+    },
+    "PORSCHE_CUP": {
+      "label": "Porsche Cup",
+      "description": "Porsche 911 GT3 Cup (992), every assist variant",
+      "presets": [
+        "preset_992c_mech_1",
+        "preset_992c_mech_2",
+        "preset_992c_mech_3"
+      ]
+    },
+    "MX5_CUP": {
+      "label": "MX-5 Cup",
+      "description": "Mazda MX-5 ND Global Cup",
+      "presets": [
+        "preset_mx5ndcup_mech_1",
+        "preset_mx5ndcup_mech_2"
+      ]
+    },
+    "M2_RACING": {
+      "label": "M2 Racing",
+      "description": "BMW M2 CS Racing, 350 and 450 hp",
+      "presets": [
+        "preset_m2csr_mech_1",
+        "preset_m2csr_mech_2"
+      ]
+    },
+    "F1": {
+      "label": "F1",
+      "description": "Ferrari Formula 1 cars, 2004 and 2025",
+      "presets": [
+        "preset_f2004_mech_1",
+        "preset_sf25_mech_1"
+      ]
+    },
+    "SUPERCARS": {
+      "label": "Supercars",
+      "description": "Modern road supercars",
+      "presets": [
+        "preset_sp3_mech_1",
+        "preset_296gtb_mech_2",
+        "preset_sto_mech_2",
+        "preset_gt3rs_mech_2"
+      ]
+    },
+    "SPORTS": {
+      "label": "Sports",
+      "description": "Modern sports cars",
+      "presets": [
+        "preset_a110s_mech_1",
+        "preset_emira_mech_2",
+        "preset_718gt4rs_mech_1",
+        "preset_m2_mech_2",
+        "preset_m4csl_mech_1",
+        "preset_zl1_mech_2",
+        "preset_r8v10_mech_1"
+      ]
+    },
+    "HOT_HATCH": {
+      "label": "Hot Hatch",
+      "description": "Hot hatchbacks",
+      "presets": [
+        "preset_mk8gti_mech_1",
+        "preset_mk8r_mech_1",
+        "preset_i30n_hb_mech_2",
+        "preset_jcs_mech_2",
+        "preset_695b_mech_1",
+        "preset_rs3_mech_1",
+        "preset_a290b_mech_1"
+      ]
+    },
+    "JDM": {
+      "label": "JDM",
+      "description": "Japanese icons",
+      "presets": [
+        "preset_nsxr_mech_1",
+        "preset_s2000ap1_mech_1",
+        "preset_supramkiv_mech_1",
+        "preset_rx7fd_mech_1",
+        "preset_ae86_mech_2",
+        "preset_240z_mech_2",
+        "preset_mx5na_mech_2",
+        "preset_gr86_mech_1"
+      ]
+    },
+    "HOMOLOGATION": {
+      "label": "Homologation",
+      "description": "80s and 90s rally and touring homologation specials",
+      "presets": [
+        "preset_sq_mech_1",
+        "preset_hfevoii_mech_1",
+        "preset_t16_mech_1",
+        "preset_m3evoiii_mech_1",
+        "preset_190e_mech_1",
+        "preset_escortrs_mech_1"
+      ]
+    },
+    "CLASSIC_SUPERCARS": {
+      "label": "80s Supercars",
+      "description": "Classic supercars of the 80s and early 90s",
+      "presets": [
+        "preset_288gto_mech_1",
+        "preset_cntqv_mech_1",
+        "preset_964_mech_1",
+        "preset_964_mech_2"
+      ]
+    },
+    "RETRO": {
+      "label": "Retro",
+      "description": "60s to 80s classics",
+      "presets": [
+        "preset_sprintgta_mech_1",
+        "preset_240z_mech_1",
+        "preset_gtimk1_mech_1",
+        "preset_75t_mech_1",
+        "preset_r5gt_mech_1"
+      ]
+    },
+    "CATERHAM": {
+      "label": "Caterham",
+      "description": "Caterham 485 CSR and Academy",
+      "presets": [
+        "ks_caterham_485_csr_mech_2",
+        "ks_caterham_485_csr_mech_3",
+        "ks_caterham_acmd_mech_1"
+      ]
+    }
+  },
+  "names": {
+    "hotlap_record": "{base} {label} | {time} {driver}",
+    "hotlap_empty": "{base} {label} | Beat the clock",
+    "race_winner": "{base} {label} Race | Champion: {winner}",
+    "race_empty": "{base} {label} Race | Win to name the server"
+  },
+  "race_config": {
+    "practice_duration": 900,
+    "qualify_duration": 600,
+    "race_duration": 10,
+    "race_duration_type": "GameModeSelectionDuration_LAPS"
+  }
+}

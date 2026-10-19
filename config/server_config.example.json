@@ -1,0 +1,14 @@
+{
+  "server_tcp_listener_port": "__GAME_PORT__",
+  "server_udp_listener_port": "__GAME_PORT__",
+  "server_name": "__SERVER_NAME__",
+  "launch_path": "Z:\\data\\server",
+  "driver_password": "__DRIVER_PASSWORD__",
+  "admin_password": "__ADMIN_PASSWORD__",
+  "spectator_password": "__SPECTATOR_PASSWORD__",
+  "max_players": "__MAX_PLAYERS__",
+  "netcode_update_interval": 50,
+  "cycle": true,
+  "server_http_port": "__HTTP_PORT__",
+  "results_path": "Z:\\data\\results"
+}

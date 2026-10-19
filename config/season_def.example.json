@@ -1,0 +1,21 @@
+{
+  "game_type": "GameModeType_HOTLAP",
+  "game_config": {
+    "practice_duration": 7200,
+    "practice_time_of_day": {"hour": 10, "minute": 0, "time_multiplier": 1.0},
+    "practice_overtime_waiting_next_session": 60,
+    "practice_max_wait_to_box": 0,
+    "min_waiting_for_players": 0,
+    "max_waiting_for_players": 60
+  },
+  "event": {
+    "track": "Monza",
+    "layout": "GP",
+    "event_name": "GP Time Attack",
+    "track_length": 5793,
+    "max_pit_slot": 30
+  },
+  "weather_type": "GameModeSelectionWeatherType_CLEAR",
+  "weather_behaviour": "GameModeSelectionWeatherBehaviour_STATIC",
+  "initial_grip": "InitialGrip_OPTIMUM"
+}

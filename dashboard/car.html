@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{SITE_NAME}} — Car</title>
+<meta name="description" content="Leaderboard of a single car">
+<meta name="theme-color" content="#090c12">
+<link rel="stylesheet" href="/style.css">
+{{SITE_STYLE}}
+<script type="application/json" id="site-config">{{SITE_CONFIG}}</script>
+</head>
+<body>
+<header id="hdr"></header>
+<main class="wrap">
+<a class="muted back" href="/records">← Leaderboards</a>
+<h1 id="name">Car</h1>
+<div class="sub" id="sub"></div>
+<section class="card"><div class="tablewrap"><table id="cartable"><thead><tr><th>#</th><th>Driver</th><th class="r">Lap time</th><th class="r hide-sm">Gap</th>
+<th class="c hide-sm sec-col">S1</th><th class="c hide-sm sec-col">S2</th><th class="c hide-sm sec-col">S3</th><th class="r hide-sm">Date</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+</main>
+<script src="/app.js"></script>
+<script src="/car.js"></script>
+</body>
+</html>

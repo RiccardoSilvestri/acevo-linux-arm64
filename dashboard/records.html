@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{SITE_NAME}} — Leaderboards</title>
+<meta name="description" content="Track records and per-car leaderboards">
+<meta name="theme-color" content="#090c12">
+<link rel="stylesheet" href="/style.css">
+{{SITE_STYLE}}
+<script type="application/json" id="site-config">{{SITE_CONFIG}}</script>
+</head>
+<body>
+<header id="hdr"></header>
+<main class="wrap">
+<h1>Leaderboards</h1>
+<div class="sub">Valid laps only — laps with track-limit violations never count.</div>
+<div class="sel-row" id="tracks"></div>
+<div class="stats" id="stats"></div>
+<div class="grid-2">
+  <section class="card"><div class="card-h">Records by car <span class="muted lc">tap a car for the full list</span></div><div id="cars"></div></section>
+  <div class="stack">
+    <section class="card"><div class="card-h">Overall top 10</div><div id="top"></div></section>
+    <section class="card"><div class="card-h">Record history</div><div id="hist"></div></section>
+  </div>
+</div>
+</main>
+<script src="/app.js"></script>
+<script src="/records.js"></script>
+</body>
+</html>
