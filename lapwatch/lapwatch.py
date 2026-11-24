@@ -497,8 +497,18 @@ class Hub:
         for k in [k for k in self.streams if k[0] == client and k[1] == cport]:
             del self.streams[k]
         if not any(k[0] == client for k in self.streams) and client in self.ip_car:
-            del self.ip_car[client]
+            cid = self.ip_car.pop(client)
             self.stats["conn_closed"] += 1
+            if cid not in self.ip_car.values():
+                self._car_left(cid)
+
+    def _car_left(self, cid):
+        # With nobody left, the server sends no further leaderboard to say so.
+        self.connected[cid] = False
+        car = self.race["cars"].get(cid)
+        if car is not None:
+            car["connected"] = False
+            self._race_dirty = True
 
     def heal(self):
         now = self.now

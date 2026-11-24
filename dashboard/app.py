@@ -72,6 +72,7 @@ RECORD_HISTORY_KEEP = _env("RECORD_HISTORY_KEEP", 50, int)
 CONSISTENCY_WINDOW = _env("CONSISTENCY_WINDOW", 1.07, float)
 CONSISTENCY_LAPS = _env("CONSISTENCY_LAPS", 15, int)
 LOG_TAIL_BYTES = _env("LOG_TAIL_BYTES", 1048576, int)
+LOG_BACKFILL_BYTES = _env("LOG_BACKFILL_BYTES", 67108864, int)
 MAX_WS_CLIENTS = _env("MAX_WS_CLIENTS", 150, int)
 MAX_SSE_CLIENTS = _env("MAX_SSE_CLIENTS", 25, int)
 WS_QUEUE = _env("WS_QUEUE", 300, int)
@@ -115,6 +116,14 @@ ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[a-zA-Z]|\x1b\[\?25[hl]")
 LINE_RE = re.compile(
     r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.\d+\]\s+\[(\w+)\]\s+\[(\w+)\]\s+(.*)"
 )
+RECORD_START_RE = re.compile(r"\[\d{4}-\d{2}-\d{2} ")
+# Records that carry nothing the dashboard reads.
+LOG_NOISE_RE = re.compile(
+    r"\[[^\]]*\]\s+(?:"
+    r"\[network\]\s+\[info\]\s+(?:Received Ping from|TCP socket (?:SEND|RECV) buffer set|"
+    r"Outbound msg to backend|Incoming msg from backend|Server Late)|"
+    r"\[server\]\s+\[info\]\s+(?:New connection received|Alive connections:|Removing dead connection|"
+    r"lastHeartbeat|connection closed \d+ due to not established conn))")
 PLAYERS_RE = re.compile(r"Server updated: (\d+) players")
 IP_RE = re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b")
 STEAMID_RE = re.compile(r"\b7656\d{13}\b")
@@ -402,26 +411,75 @@ def build_leaderboard(track_key=None):
     }
 
 
+class LogTail:
+    """Follows the game log and keeps its latest meaningful records.
+
+    Server list pings and connection chatter are most of what an idle server
+    writes. They are dropped before the size budget applies, so that they
+    cannot push session and join lines out of what the dashboard parses.
+    """
+
+    def __init__(self, path, max_bytes):
+        self.path, self.max_bytes = path, max_bytes
+        self._reset(None)
+
+    def _reset(self, inode):
+        self.inode, self.offset, self.partial, self.current = inode, 0, b"", ""
+        self.records, self.size = deque(), 0
+
+    def _commit(self, record):
+        if not record or LOG_NOISE_RE.match(record):
+            return
+        self.records.append(record)
+        self.size += len(record)
+        while self.size > self.max_bytes and len(self.records) > 1:
+            self.size -= len(self.records.popleft())
+
+    def _feed(self, data):
+        pieces = (self.partial + data).split(b"\n")
+        self.partial = pieces.pop()
+        for piece in pieces:
+            for raw in piece.split(b"\r"):
+                line = ANSI_RE.sub("", raw.decode("utf-8", errors="replace"))
+                if RECORD_START_RE.match(line):
+                    self._commit(self.current)
+                    self.current = line
+                else:
+                    self.current += line
+
+    def read(self):
+        try:
+            with open(self.path, "rb") as f:
+                st = os.fstat(f.fileno())
+                # A new file (the log is rotated on every game start) or a truncated one.
+                if st.st_ino != self.inode or st.st_size < self.offset:
+                    self._reset(st.st_ino)
+                    self.offset = max(0, st.st_size - LOG_BACKFILL_BYTES)
+                f.seek(self.offset)
+                while self.offset < st.st_size:
+                    data = f.read(min(1 << 20, st.st_size - self.offset))
+                    if not data:
+                        break
+                    self.offset += len(data)
+                    self._feed(data)
+        except OSError:
+            return []
+        out = list(self.records)
+        if self.current and not LOG_NOISE_RE.match(self.current):
+            out.append(self.current)
+        return out
+
+
+_log_tails = {}
+_log_lock = threading.Lock()
+
+
 def tail_lines(path, max_bytes=LOG_TAIL_BYTES):
-    try:
-        size = os.path.getsize(path)
-        with open(path, "rb") as f:
-            f.seek(max(0, size - max_bytes))
-            raw = f.read().decode("utf-8", errors="replace")
-    except Exception:
-        return []
-    text = ANSI_RE.sub("", raw)
-    merged, current = [], ""
-    for line in text.splitlines():
-        if re.match(r"\[\d{4}-\d{2}-\d{2} ", line):
-            if current:
-                merged.append(current)
-            current = line
-        else:
-            current += line
-    if current:
-        merged.append(current)
-    return merged
+    with _log_lock:
+        tail = _log_tails.get(path)
+        if tail is None:
+            tail = _log_tails[path] = LogTail(path, max_bytes)
+        return tail.read()
 
 
 def first_match(patterns, text):
@@ -640,7 +698,9 @@ def parse_log():
 
     CAR_INFO_FULL.clear()
     CAR_INFO_FULL.update(carid_info)
-    SESSION_START[0] = epoch_utc(session_start) if session_start else None
+    # The marker can age out of the parsed records; the session it opened has not.
+    if session_start:
+        SESSION_START[0] = epoch_utc(session_start)
     live_out = None
     if any(last_sectors) or last_lap:
         live_out = {

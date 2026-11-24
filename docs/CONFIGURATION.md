@@ -102,7 +102,8 @@ exist yet. Afterwards edit `server-data/server/server_config.json` or use the bo
 | `WS_QUEUE`, `WS_PING_S`, `HEARTBEAT_S` | `300`, `20`, `5` | Per-client queue, ping and heartbeat |
 | `HELLO_LAPS`, `HISTORY_SIZE`, `INCIDENTS_SIZE` | `60`, `3000`, `300` | In-memory history sizes |
 | `PENDING_LAP_TTL_S` | `900` | How long a lap waits for its driver name before being dropped |
-| `LOG_TAIL_BYTES` | `1048576` | Bytes of the game log parsed each cycle |
+| `LOG_TAIL_BYTES` | `1048576` | Size of the latest game log records kept and parsed, pings and connection chatter excluded |
+| `LOG_BACKFILL_BYTES` | `67108864` | How far back the game log is read when the website starts |
 | `CHECK_ORIGIN` | `1` | Reject WebSocket connections from other origins |
 
 **Paths** (inside the container; the defaults match the Compose file): `ACE_LAPWATCH_DIR`, `ACE_LAPWATCH_SOCK`
