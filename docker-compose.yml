@@ -27,7 +27,13 @@ services:
     tty: true
     stop_grace_period: 30s
     healthcheck:
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/$${ACE_PORT:-9600}"]
+      # Look for the listening game socket without connecting to it: the server
+      # logs every connection that is opened and closed again.
+      test:
+        - CMD
+        - bash
+        - -c
+        - grep -q ":$$(printf '%04X' $${ACE_PORT:-9600}) 00000000:0000 0A" /proc/net/tcp
       interval: 30s
       timeout: 5s
       retries: 3
@@ -105,6 +111,7 @@ services:
       - dashboard
     environment:
       SITE_DOMAIN: ${SITE_DOMAIN:-localhost}
+      PROXY_ALLOW_DIRECT: ${PROXY_ALLOW_DIRECT:-1}
     volumes:
       - ./config/proxy/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ${TLS_CERT:-./config/proxy/cert.pem}:/etc/nginx/tls/cert.pem:ro

@@ -29,12 +29,19 @@ container when its environment changes, and the game server should only restart 
 | `SITE_DOMAIN` | `localhost` | Domain served by the proxy (`www.` redirects to it) |
 | `TLS_CERT`, `TLS_KEY` | `./config/proxy/cert.pem`, `key.pem` | Certificate and key on the host (for example a Cloudflare Origin certificate) |
 | `HTTP_PORT`, `HTTPS_PORT` | `80`, `443` | Public ports of the proxy |
+| `PROXY_ALLOW_DIRECT` | `1` | Set to `0` when the site is behind Cloudflare: only its edge servers are answered |
 
 ### HTTPS
 
 With `COMPOSE_PROFILES=https`, an nginx container terminates TLS for `SITE_DOMAIN` and forwards everything (WebSocket
 included) to the dashboard; plain HTTP redirects to HTTPS. Behind Cloudflare, use an Origin certificate with the SSL
 mode set to *Full (strict)*. Once the proxy is up you can set `WEB_BIND=127.0.0.1` so that port 8090 is no longer public.
+
+The proxy answers only requests that name `SITE_DOMAIN`, accepts only `GET` and `HEAD`, and drops common vulnerability
+probes without logging them. With `PROXY_ALLOW_DIRECT=0` it also ignores every client that does not come through
+Cloudflare; the address ranges are listed in `config/proxy/default.conf.template` and need updating if
+[Cloudflare changes them](https://www.cloudflare.com/ips/). Changes to the template apply after
+`docker compose restart proxy`.
 
 ## `config/game.env`
 

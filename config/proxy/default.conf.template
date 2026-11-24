@@ -3,10 +3,66 @@ map $http_upgrade $connection_upgrade {
     ''      close;
 }
 
+# Who may reach the site. The listed ranges are Cloudflare's edge servers
+# (https://www.cloudflare.com/ips/). PROXY_ALLOW_DIRECT=0 refuses everybody else.
+geo $origin_allowed {
+    default ${PROXY_ALLOW_DIRECT};
+
+    173.245.48.0/20  1;
+    103.21.244.0/22  1;
+    103.22.200.0/22  1;
+    103.31.4.0/22    1;
+    141.101.64.0/18  1;
+    108.162.192.0/18 1;
+    190.93.240.0/20  1;
+    188.114.96.0/20  1;
+    197.234.240.0/22 1;
+    198.41.128.0/17  1;
+    162.158.0.0/15   1;
+    104.16.0.0/13    1;
+    104.24.0.0/14    1;
+    172.64.0.0/13    1;
+    131.0.72.0/22    1;
+    2400:cb00::/32   1;
+    2606:4700::/32   1;
+    2803:f800::/32   1;
+    2405:b500::/32   1;
+    2405:8100::/32   1;
+    2a06:98c0::/29   1;
+    2c0f:f248::/32   1;
+}
+
+# Refused requests are not logged, so that scanners do not bury real visits.
+map $status $loggable {
+    405     0;
+    444     0;
+    default 1;
+}
+
+# Requests that do not name the site (bare IP address, unknown host) get nothing.
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    access_log off;
+    return 444;
+}
+
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    server_name _;
+    ssl_reject_handshake on;
+}
+
 server {
     listen 80;
     listen [::]:80;
     server_name ${SITE_DOMAIN} www.${SITE_DOMAIN};
+    access_log /var/log/nginx/access.log main if=$loggable;
+    if ($origin_allowed = 0) {
+        return 444;
+    }
     location / {
         return 301 https://${SITE_DOMAIN}$request_uri;
     }
@@ -17,6 +73,7 @@ server {
     listen [::]:443 ssl;
     http2 on;
     server_name ${SITE_DOMAIN} www.${SITE_DOMAIN};
+    access_log /var/log/nginx/access.log main if=$loggable;
 
     ssl_certificate /etc/nginx/tls/cert.pem;
     ssl_certificate_key /etc/nginx/tls/key.pem;
@@ -25,8 +82,29 @@ server {
 
     add_header Strict-Transport-Security "max-age=31536000" always;
 
+    if ($origin_allowed = 0) {
+        return 444;
+    }
+
+    # The website only reads.
+    if ($request_method !~ ^(GET|HEAD)$) {
+        return 405;
+    }
+
     if ($host = www.${SITE_DOMAIN}) {
         return 301 https://${SITE_DOMAIN}$request_uri;
+    }
+
+    # Typical vulnerability probes never reach the dashboard.
+    location ~* (\.php|/\.env|/\.git|/wp-|/cgi-bin) {
+        access_log off;
+        return 404;
+    }
+
+    # No icons are shipped: answer quietly instead of with a 404.
+    location ~ ^/(favicon\.ico|apple-touch-icon[a-z0-9x-]*\.png)$ {
+        access_log off;
+        return 204;
     }
 
     location /ws {
@@ -48,6 +126,21 @@ server {
         proxy_set_header Connection "";
         proxy_buffering off;
         proxy_read_timeout 3600s;
+    }
+
+    # Driver and car names are free text: keep the probe filter away from them.
+    location ^~ /driver/ {
+        proxy_pass http://dashboard:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+
+    location ^~ /car/ {
+        proxy_pass http://dashboard:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     location / {
