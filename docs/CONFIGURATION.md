@@ -41,7 +41,7 @@ The proxy answers only requests that name `SITE_DOMAIN`, accepts only `GET` and 
 probes without logging them. With `PROXY_ALLOW_DIRECT=0` it also ignores every client that does not come through
 Cloudflare; the address ranges are listed in `config/proxy/default.conf.template` and need updating if
 [Cloudflare changes them](https://www.cloudflare.com/ips/). Changes to the template apply after
-`docker compose restart proxy`.
+`docker compose restart proxy`; changes to `.env` need `docker compose up -d proxy`.
 
 ## `config/game.env`
 
