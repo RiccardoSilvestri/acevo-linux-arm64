@@ -172,6 +172,10 @@ DUMP_NAME_RE = re.compile(r'"name":\s*"([^"]{2,40})"')
 DUMP_FOLDER_RE = re.compile(r'"folder_path":\s*"content')
 DUMP_EVENT_RE = re.compile(r'"event_name":\s*"(.+?)\s+(?:Time Attack|Race)"')
 
+# Records that say who is connected and since when the session runs.
+LOG_PINNED_RES = (JOIN_NAME_RE, JOIN_CAR_RE, LEAVE_RE, DISCONNECT_RE, SESSION_START_RE)
+LOG_PINNED_RECORDS = 2000
+
 PENALTY_TEXT = {
     "Disqualification": "Disqualified",
     "Drive_Through": "Drive-through penalty",
@@ -416,7 +420,9 @@ class LogTail:
 
     Server list pings and connection chatter are most of what an idle server
     writes. They are dropped before the size budget applies, so that they
-    cannot push session and join lines out of what the dashboard parses.
+    cannot push session and join lines out of what the dashboard parses. Those
+    lines are also kept when a busy session outgrows the budget: without them a
+    long-connected driver would become unknown and their laps would be lost.
     """
 
     def __init__(self, path, max_bytes):
@@ -426,6 +432,7 @@ class LogTail:
     def _reset(self, inode):
         self.inode, self.offset, self.partial, self.current = inode, 0, b"", ""
         self.records, self.size = deque(), 0
+        self.pinned = deque(maxlen=LOG_PINNED_RECORDS)
 
     def _commit(self, record):
         if not record or LOG_NOISE_RE.match(record):
@@ -433,7 +440,10 @@ class LogTail:
         self.records.append(record)
         self.size += len(record)
         while self.size > self.max_bytes and len(self.records) > 1:
-            self.size -= len(self.records.popleft())
+            old = self.records.popleft()
+            self.size -= len(old)
+            if any(p.search(old) for p in LOG_PINNED_RES):
+                self.pinned.append(old)
 
     def _feed(self, data):
         pieces = (self.partial + data).split(b"\n")
@@ -464,7 +474,8 @@ class LogTail:
                     self._feed(data)
         except OSError:
             return []
-        out = list(self.records)
+        # Everything pinned is older than everything still in the budget.
+        out = list(self.pinned) + list(self.records)
         if self.current and not LOG_NOISE_RE.match(self.current):
             out.append(self.current)
         return out

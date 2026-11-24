@@ -63,6 +63,24 @@ def log_tail(tmp):
           got[-1].endswith("line 499") and sum(map(len, got)) < 2100, len(got))
 
 
+def busy_session(tmp):
+    log = tmp / "busy.log"
+    join = (rec("connecting gamecar x (Test Driver | 76561198000000001)")
+            + rec("76561198000000001 connected (true) on car ks_car, with new carId abc", "gameplay"))
+    log.write_bytes(rec("Restart Season") + join
+                    + b"".join(rec(f"On Split start false end false id 0 splittime {i}", "gameplay")
+                               for i in range(500)))
+    tail = D.LogTail(str(log), 2000)
+    got = tail.read()
+    check("a driver's join outlives the size budget",
+          any(D.JOIN_NAME_RE.search(l) for l in got) and any(D.JOIN_CAR_RE.search(l) for l in got))
+    check("the session start outlives it too", "Restart Season" in got[0], got[0])
+    check("order is preserved", got[-1].endswith("splittime 499") and D.JOIN_CAR_RE.search(got[2]), got[:3])
+    os.replace(log, tmp / "busy.log.old")
+    log.write_bytes(rec("Listening to UDP port 9600"))
+    check("rotation forgets old drivers", len(tail.read()) == 1)
+
+
 def departures(tmp):
     season = tmp / "season.json"
     season.write_text(json.dumps({"event": {"track": "Monza", "layout": "GP"}}))
@@ -82,6 +100,7 @@ def departures(tmp):
 def main():
     tmp = Path(tempfile.mkdtemp())
     log_tail(tmp)
+    busy_session(tmp)
     departures(tmp)
     print(f"{len(fails)} failed")
     sys.exit(1 if fails else 0)
